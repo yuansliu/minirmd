@@ -104,7 +104,7 @@ inline void getPars(int argc, char* argv[]) {
 	bool is1 = false, is2 = false; //four
 	int oc;
 	iskf = false;
-	while ((oc = getopt(argc, argv, "i:f:o:t:d:k:r")) >= 0) {
+	while ((oc = getopt(argc, argv, "i:f:o:t:d:k:hr")) >= 0) {
 		switch (oc) {
 			case 'i':
 				rf1 = optarg;
