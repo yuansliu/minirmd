@@ -90,7 +90,7 @@ inline void displayHelp(const char* prog) {
 	printf("\t\t -f reads file, if paired end\n");
 	printf("\t\t -o the output file\n");
 	printf("\t\t -d number of allowed mismatch\n");
-	printf("\t\t -k the kmer file\n");
+	printf("\t\t -k the file to store values of k\n");
 	printf("\t\t -r remove duplicates on reverse-complement strand\n");
 	printf("\t\t -t the number of threads\n");
 	printf("\t\t -h print help message\n");
