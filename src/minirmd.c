@@ -96,7 +96,7 @@ inline void displayHelp(const char* prog) {
 	printf("\t\t -h print help message\n");
 
 	printf("Example:\n\t\t");
-	printf("./minirmd -i test.fastq -o test_rm_1.fastq -d 1\n\n");
+	printf("./minirmd -i test.fastq -o test_rm_1.fastq -d 1\n\t\t");
 	printf("./minirmd -i test_1.fastq -f test_2.fastq -o test_rm_2.fastq -d 2\n\n");
 }
 
