@@ -84,7 +84,7 @@ inline void init() {
 inline void displayHelp(const char* prog) {
 	printf("minirmd v1, by Yuansheng Liu, August 2020.\n");
 	printf("Usage: %s -i <file> -f <file> -o <output> [option parameters]\n", prog);
-	printf("\t options:\n \t\t -t <threads> -r\n\n");
+	printf("\t options:\n");
 	// printf("-----------\n");
 	printf("\t\t -i reads file\n");
 	printf("\t\t -f reads file, if paired end\n");
