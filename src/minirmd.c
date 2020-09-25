@@ -1,4 +1,4 @@
-# include <cstdio>
+# include <stdio.h>
 # include <iostream>
 # include <fstream>
 # include <vector>
@@ -7,9 +7,9 @@
 # include <chrono>
 # include <thread>
 # include <mutex>
-# include <cstdlib>
-# include <cstring>
-# include <ctime>
+# include <stdlib.h>
+# include <string.h>
+# include <time.h>
 # include <algorithm>
 # include <unistd.h>
 # include "minirmd.h"
