@@ -82,7 +82,7 @@ inline void init() {
 }
 
 inline void displayHelp(const char* prog) {
-	printf("minirmd v1, by Yuansheng Liu, August 2020.\n");
+	printf("minirmd v1, by Yuansheng Liu, October 2020.\n");
 	printf("Usage: %s -i <file> -f <file> -o <output> [option parameters]\n", prog);
 	printf("\t options:\n");
 	// printf("-----------\n");
@@ -142,7 +142,8 @@ inline void getPars(int argc, char* argv[]) {
 	}
 
 	if (!is1 || !is2) {
-		fprintf(stderr, "Required parameters are not provided!!\n\n");
+		// fprintf(stderr, "Required parameters are not provided!!\n\n");
+		displayHelp(argv[0]);
 		exit(1);
 	}
 	
@@ -151,7 +152,8 @@ inline void getPars(int argc, char* argv[]) {
 	if (iskf) {
 		f.open(kf);
 		if (f.fail()) {
-			fprintf(stderr, "Kmer file '%s' does not exist.\n", kf.c_str());
+			displayHelp(argv[0]);
+			// fprintf(stderr, "Kmer file '%s' does not exist.\n", kf.c_str());
 			exit(1);
 		}
 		f.close();
@@ -159,7 +161,8 @@ inline void getPars(int argc, char* argv[]) {
 
 	f.open(rf1);
 	if (f.fail()) {
-		fprintf(stderr, "Reads file '%s' does not exist.\n", rf1.c_str());
+		displayHelp(argv[0]);
+		// fprintf(stderr, "Reads file '%s' does not exist.\n", rf1.c_str());
 		exit(1);
 	}
 	f.close();
@@ -167,7 +170,8 @@ inline void getPars(int argc, char* argv[]) {
 	if (isPE) {
 		f.open(rf2);
 		if (f.fail()) {
-			fprintf(stderr, "Reads file '%s' does not exist.\n", rf2.c_str());
+			displayHelp(argv[0]);
+			// fprintf(stderr, "Reads file '%s' does not exist.\n", rf2.c_str());
 			exit(1);
 		}
 		f.close();
@@ -1246,7 +1250,7 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 	}
-
+	L = strlen(seq1[0].seq);
 	if (iskf) {
 		kmervecsize = 0;
 		kmervec = new int[32];
@@ -1273,75 +1277,132 @@ int main(int argc, char* argv[]) {
 		sort (kmervec, kmervec + kmervecsize, greater<int>() );
 		sort (lkmervec, lkmervec + lkmervecsize, greater<int>() );
 	} else {
-		if (difthr == 0) {
-			kmervecsize = 1;
-		} else 
-		if (difthr == 1) {
-			kmervecsize = 9;
-		} else 
-		if (difthr == 2) {
-			kmervecsize = 10;
-		} else {
-			kmervecsize = 12;
-		}
-		lkmervecsize = 0;
-		if (isRC) kmervecsize = 16;
-		if (difthr == 0) kmervecsize = 1;
+		if (L < 105) {		
+			if (difthr == 0) {
+				kmervecsize = 1;
+			} else 
+			if (difthr == 1) {
+				kmervecsize = 9;
+			} else 
+			if (difthr == 2) {
+				kmervecsize = 10;
+			} else {
+				kmervecsize = 12;
+			}
+			lkmervecsize = 0;
+			if (isRC) kmervecsize = 16;
+			if (difthr == 0) kmervecsize = 1;
 
-		if (kmervecsize > 0)  {
-			kmervec = new int[kmervecsize];
-			if (kmervecsize == 1) {
-				kmervec[0] = 29;
-				if (isPE) {
+			if (kmervecsize > 0)  {
+				kmervec = new int[kmervecsize];
+				if (kmervecsize == 1) {
+					kmervec[0] = 29;
+					if (isPE) {
+						lkmervecsize = 1;
+						lkmervec = new int[lkmervecsize];
+						lkmervec[0] = 41;
+						kmervecsize = 0;
+					}
+				} else {
+					kmervec[0] = 28;
+					if (isPE) {
+						lkmervecsize = 1;
+						lkmervec = new int[lkmervecsize];
+						lkmervec[0] = 41;
+					}
+				}
+
+				if (isRC) kmervec[0] = 31;
+
+				for (int i = 1; i < kmervecsize; ++i) {
+					kmervec[i] = kmervec[i-1] - 1;
+				}
+				// if (lkmervecsize == 0) max_kmer = kmervec[0];
+			}
+
+			if (max_rid > (1ULL<<27)) { //134217728 214364631
+				// 51 49 48 47 46 32 
+				// 31 30 29 28
+				lkmervecsize = 6;
+				if (isRC) {
+					lkmervecsize = 8;
+					if (difthr >= 3) lkmervecsize = 9;
+				}
+				lkmervec = new int[lkmervecsize];
+				lkmervec[0] = 51;
+				lkmervec[1] = 49;
+				lkmervec[2] = 48;
+				lkmervec[3] = 47;
+				lkmervec[4] = 46;
+				if(isRC) {
+					lkmervec[5] = 45;			
+					lkmervec[6] = 44;
+					if (difthr >= 3) lkmervec[7] = 33;		
+				} 
+				lkmervec[lkmervecsize - 1] = 32;
+
+				kmervecsize = 4;
+
+				kmervec = new int[kmervecsize];
+				kmervec[0] = 31;
+				kmervec[1] = 30;
+				kmervec[2] = 29;
+				kmervec[3] = 28;
+
+				if (difthr == 0) {
 					lkmervecsize = 1;
-					lkmervec = new int[lkmervecsize];
-					lkmervec[0] = 41;
 					kmervecsize = 0;
 				}
+			}
+		} else 
+		if (L >= 105) {
+			if (difthr == 0) {
+				lkmervecsize = 1;
+			} else 
+			if (difthr == 1) {
+				lkmervecsize = 9;
+			} else 
+			if (difthr == 2) {
+				lkmervecsize = 10;
 			} else {
-				kmervec[0] = 28;
+				lkmervecsize = 12;
+			}
+			if (isRC && difthr > 0) {
+				lkmervecsize += 2;
+				if (difthr >= 3) ++ lkmervecsize;
 			}
 
-			if (isRC) kmervec[0] = 31;
-
-			for (int i = 1; i < kmervecsize; ++i) {
-				kmervec[i] = kmervec[i-1] - 1;
-			}
-			// if (lkmervecsize == 0) max_kmer = kmervec[0];
-		}
-
-		if (max_rid > (1ULL<<27)) { //134217728 214364631
-			// 51 49 48 47 46 32 
-			// 31 30 29 28
-			lkmervecsize = 6;
-			if (isRC) {
-				lkmervecsize = 8;
-				if (difthr >= 3) lkmervecsize = 9;
-			}
 			lkmervec = new int[lkmervecsize];
-			lkmervec[0] = 51;
-			lkmervec[1] = 49;
-			lkmervec[2] = 48;
-			lkmervec[3] = 47;
-			lkmervec[4] = 46;
-			if(isRC) {
-				lkmervec[5] = 45;			
-				lkmervec[6] = 44;
-				if (difthr >= 3) lkmervec[7] = 33;		
-			} 
-			lkmervec[lkmervecsize - 1] = 32;
-
+			// 
 			kmervecsize = 4;
+			if (isRC) ++ kmervecsize;
 
 			kmervec = new int[kmervecsize];
 			kmervec[0] = 31;
 			kmervec[1] = 30;
 			kmervec[2] = 29;
 			kmervec[3] = 28;
+			if (isRC) kmervec[4] = 27;
 
 			if (difthr == 0) {
-				lkmervecsize = 1;
-				kmervecsize = 0;
+				kmervecsize = 1;
+			}
+
+			if (L < 120) {
+				lkmervec[0] = 41;
+			} else 
+			if (L >= 120 && L < 140) {
+				lkmervec[0] = 45;
+			} else 
+			if (L >= 140 && L < 153) {
+				lkmervec[0] = 51;
+			} else {
+				lkmervec[0] = 61;
+			}
+			if (isRC && difthr > 0) ++ lkmervec[0];
+
+			for (int i = 1; i < lkmervecsize; ++i) {
+				lkmervec[i] = lkmervec[i-1] - 1;
 			}
 		}
 
@@ -1363,7 +1424,6 @@ int main(int argc, char* argv[]) {
 	// exit (0);
 	// fprintf(stderr, "%lu: %s\n", did, seq[did].seq);
 
-	L = strlen(seq1[0].seq);
 	cout << "L: " << L << endl;
 	cout << "max_rid: " << max_rid << endl;
 	// cout << "Time of read file = " << stopwatch.stop() << std::endl;
