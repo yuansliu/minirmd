@@ -9,6 +9,9 @@ minirmd is a tool to remove duplicate reads. The program is written in C++11 (te
 	cd minirmd
 	make
 
+## Test
+	sh runtest.sh
+	
 ## Usage
 
 	./minirmd -i test.fastq -o test_rm_1.fastq -d 1
