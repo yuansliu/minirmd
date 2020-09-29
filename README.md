@@ -9,6 +9,10 @@ minirmd is a tool to remove duplicate reads. The program is written in C++11 (te
 	cd minirmd
 	make
 
+
+## Install from bioconda
+	conda install -c bioconda minirmd
+
 ## Test
 	sh runtest.sh
 	
