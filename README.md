@@ -35,5 +35,13 @@ Options
 	-t  	number of threads (default 24)
 	-h  	print help message
 
+## Note
+For the following fastq format file, the second "header123" will be ignored by the tool.
+	
+	@header123
+	CGTATGCTACGTAC
+	+header123
+	KKKKKIIKKKKIII
+
 ## Contacts
 If any bugs, please email to <yyuanshengliu@gmail.com>
