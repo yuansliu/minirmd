@@ -1229,7 +1229,19 @@ inline void removeLongDuplicate() {
 	// cout << "Time of removeLongDuplicate() = " << rdt.stop() << std::endl;
 	// cout << "--------------\n";
 }
+int max_strlen() {
+	int supposed_max = 0;
+	int curr_len = 0;
 
+	for (int rid = 0; rid < max_rid; rid++) {
+		curr_len = strlen(seq1[rid].seq);
+		if (curr_len > supposed_max) {
+			supposed_max = curr_len; 
+		} 
+	}
+
+	return supposed_max;
+}
 int main(int argc, char* argv[]) {
 	// stopwatch.start();
 	init();
@@ -1250,7 +1262,7 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 	}
-	L = strlen(seq1[0].seq);
+	L = max_strlen()
 	if (iskf) {
 		kmervecsize = 0;
 		kmervec = new int[32];
