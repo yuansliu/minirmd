@@ -21,13 +21,14 @@ int L;
 size_t max_rid;
 bseq1_t *seq, *seq1, *seq2;
 bool *isremove;
+int64_t *indexremove;
 int difthr = 0;
 bool isRC = false;
 bool isPE = false;
 bool iskf;
 int *avgQual;
-string rf1, rf2, rsf, kf;
-
+string rf1, rf2, rsf, kf, logpath;
+string header_prefix;
 const size_t BUFFER_SIZE = 1ULL << 25;
 
 // bool debug = false;
@@ -81,7 +82,8 @@ inline void init() {
 	complement['n'] = 'N';
 }
 
-inline void displayHelp(const char* prog) {
+inline void displayHelp(const char *prog)
+{
 	printf("minirmd v1, by Yuansheng Liu, October 2020.\n");
 	printf("Usage: %s -i <file> -f <file> -o <output> [option parameters]\n", prog);
 	printf("\t options:\n");
@@ -89,6 +91,7 @@ inline void displayHelp(const char* prog) {
 	printf("\t\t -i reads file\n");
 	printf("\t\t -f reads file, if paired end\n");
 	printf("\t\t -o the output file\n");
+	printf("\t\t -l the log file location\n");
 	printf("\t\t -d number of allowed mismatch\n");
 	printf("\t\t -k the file to store values of k\n");
 	printf("\t\t -r remove duplicates on reverse-complement strand\n");
@@ -104,7 +107,7 @@ inline void getPars(int argc, char* argv[]) {
 	bool is1 = false, is2 = false; //four
 	int oc;
 	iskf = false;
-	while ((oc = getopt(argc, argv, "i:f:o:t:d:k:hr")) >= 0) {
+	while ((oc = getopt(argc, argv, "i:f:o:l:t:d:k:hr")) >= 0) {
 		switch (oc) {
 			case 'i':
 				rf1 = optarg;
@@ -124,6 +127,9 @@ inline void getPars(int argc, char* argv[]) {
 				break;
 			case 'r':
 				isRC = true;
+				break;
+			case 'l':
+				logpath = optarg;
 				break;
 			case 't':
 				nthreads = atoi(optarg);
@@ -175,6 +181,18 @@ inline void getPars(int argc, char* argv[]) {
 			exit(1);
 		}
 		f.close();
+	}
+
+    if (logpath.length() == 0)
+	{
+		logpath = "output.log";
+	}
+
+	header_prefix = ">";
+
+	if (rsf.find(".fq") != -1 || rsf.find("fastaq") != -1 || rsf.find("fastq") != -1)
+	{
+		header_prefix = "@";
 	}
 
 	/*std::ofstream fo;
@@ -806,8 +824,10 @@ void processClusterSEFun() {
 							if (difnum <= difthr) {
 								if (avgQual[aa] >= avgQual[bb]) {
 									isremove[bb] = true;
+									indexremove[bb] = aa;
 								} else {
 									isremove[aa] = true;
+									indexremove[bb] = aa;
 									// break;
 								}
 							}
@@ -838,8 +858,10 @@ void processClusterSEFun() {
 							if (difnum <= difthr) {
 								if (avgQual[aa] >= avgQual[bb]) {
 									isremove[bb] = true;
+									indexremove[bb] = aa;
 								} else {
 									isremove[aa] = true;
+									indexremove[bb] = aa;
 									// break;
 								}
 							}
@@ -887,8 +909,10 @@ void processClusterPEFun() {
 							if (difnum <= difthr) {
 								if (avgQual[aa] >= avgQual[bb]) {
 									isremove[bb] = true;
+									indexremove[bb] = aa;
 								} else {
 									isremove[aa] = true;
+									indexremove[bb] = aa;
 									// break; 
 								}
 							}
@@ -923,8 +947,10 @@ void processClusterPEFun() {
 							if (difnum <= difthr) {
 								if (avgQual[aa] >= avgQual[bb]) {
 									isremove[bb] = true;
+									indexremove[bb] = aa;
 								} else {
 									isremove[aa] = true;
+									indexremove[bb] = aa;
 									// break; 
 								}
 							}
@@ -979,8 +1005,10 @@ void processLargeClusterSEFun() {
 						if (difnum <= difthr) {
 							if (avgQual[aa] >= avgQual[bb]) {
 								isremove[bb] = true;
+								indexremove[bb] = aa;
 							} else {
 								isremove[aa] = true;
+ 								indexremove[bb] = aa;                               
 								// break;
 							}
 						}
@@ -1012,8 +1040,10 @@ void processLargeClusterSEFun() {
 						if (difnum <= difthr) {
 							if (avgQual[aa] >= avgQual[bb]) {
 								isremove[bb] = true;
+								indexremove[bb] = aa;
 							} else {
 								isremove[aa] = true;
+								indexremove[bb] = aa;
 								// break;
 							}
 						}
@@ -1058,8 +1088,10 @@ void processLargeClusterPEFun() {
 						if (difnum <= difthr) {
 							if (avgQual[aa] >= avgQual[bb]) {
 								isremove[bb] = true;
+								indexremove[bb] = aa;
 							} else {
 								isremove[aa] = true;
+								indexremove[bb] = aa;
 								// break; 
 							}
 						}
@@ -1093,8 +1125,10 @@ void processLargeClusterPEFun() {
 						if (difnum <= difthr) {
 							if (avgQual[aa] >= avgQual[bb]) {
 								isremove[bb] = true;
+								indexremove[bb] = aa;
 							} else {
 								isremove[aa] = true;
+								indexremove[bb] = aa;
 								// break; 
 							}
 						}
@@ -1229,19 +1263,25 @@ inline void removeLongDuplicate() {
 	// cout << "Time of removeLongDuplicate() = " << rdt.stop() << std::endl;
 	// cout << "--------------\n";
 }
-int max_strlen() {
+
+int maxStrlen()
+{
 	int supposed_max = 0;
 	int curr_len = 0;
 
-	for (int rid = 0; rid < max_rid; rid++) {
+	for (int rid = 0; rid < max_rid; rid++)
+	{
 		curr_len = strlen(seq1[rid].seq);
-		if (curr_len > supposed_max) {
-			supposed_max = curr_len; 
-		} 
+		if (curr_len > supposed_max)
+		{
+			supposed_max = curr_len;
+		}
 	}
 
 	return supposed_max;
 }
+
+
 int main(int argc, char* argv[]) {
 	// stopwatch.start();
 	init();
@@ -1262,7 +1302,7 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 	}
-	L = max_strlen()
+	L = maxStrlen();
 	if (iskf) {
 		kmervecsize = 0;
 		kmervec = new int[32];
@@ -1446,6 +1486,8 @@ int main(int argc, char* argv[]) {
 	// scanf("%s", str);
 	isremove = new bool[max_rid];
 	memset(isremove, false, sizeof(bool)*max_rid);
+	indexremove = new int64_t[max_rid];
+	memset(indexremove, -1, sizeof(int64_t) * max_rid);
 	avgQual = new int[max_rid];
 	memset(avgQual, 0, sizeof(int)*max_rid);
 
@@ -1475,9 +1517,12 @@ int main(int argc, char* argv[]) {
 
 	delete[] ridvec;
 	delete[] lkmervec;
-	delete[] kmervec;
+	delete[] kmervec;    
 	
 	// stopwatch.resume();
+
+	int64_t curr_parent = -1;
+	std::string *parents_buffer = new std::string[max_rid];
 
 	if (!isPE) {
 		seq = seq1;
@@ -1496,7 +1541,7 @@ int main(int argc, char* argv[]) {
 			if (!isremove[rid]) {
 				// using a buffer to speed
 				// fprintf(fp, "%s\n%s\n", seq[rid].name, seq[rid].seq);
-				buf.append("@" + string(seq[rid].name) + "\n" + string(seq[rid].seq) + "\n");
+				buf.append(header_prefix + string(seq[rid].name) + "\n" + string(seq[rid].seq) + "\n");
 				if (seq[rid].qual != NULL) {
 					// fprintf(fp, "+\n%s\n", seq[rid].qual);
 					buf.append("+\n" + string(seq[rid].qual) + "\n");
@@ -1509,6 +1554,17 @@ int main(int argc, char* argv[]) {
 			// else {
 			// 	fprintf(fpo, "%s\n", seq[rid].seq);
 			// }
+
+            curr_parent = indexremove[rid];
+			if (curr_parent != -1)
+			{
+				if (parents_buffer[curr_parent].length() == 0)
+				{
+					parents_buffer[curr_parent].append(header_prefix + string(seq[curr_parent].name) + ".\n" + string(seq[curr_parent].seq) + "\n");
+				}
+
+				parents_buffer[curr_parent].append(header_prefix + string(seq[rid].name) + "\n" + string(seq[rid].seq) + "\n");
+			}
 		}
 		if (buf.size() > 0) {
 			fsout << buf; 
@@ -1536,8 +1592,8 @@ int main(int argc, char* argv[]) {
 		for (size_t rid = 0; rid < max_rid; ++rid) {
 			// kseq_destroy
 			if (!isremove[rid]) {
-				buf0.append("@" + string(seq1[rid].name) + "\n" + string(seq1[rid].seq) + "\n");
-				buf1.append("@" + string(seq2[rid].name) + "\n" + string(seq2[rid].seq) + "\n");
+				buf0.append(header_prefix + string(seq1[rid].name) + "\n" + string(seq1[rid].seq) + "\n");
+				buf1.append(header_prefix + string(seq2[rid].name) + "\n" + string(seq2[rid].seq) + "\n");
 				// fprintf(fp1, "%s\n%s\n", seq1[rid].name, seq1[rid].seq);
 				// fprintf(fp2, "%s\n%s\n", seq2[rid].name, seq2[rid].seq);
 				if (seq1[rid].qual != NULL) {
@@ -1557,6 +1613,17 @@ int main(int argc, char* argv[]) {
 					buf1.clear();
 				}
 			}
+
+            curr_parent = indexremove[rid];
+			if (curr_parent != -1)
+			{
+				if (parents_buffer[curr_parent].length() == 0)
+				{
+					parents_buffer[curr_parent].append(header_prefix + string(seq[curr_parent].name) + ".\n" + string(seq[curr_parent].seq) + "\n");
+				}
+
+				parents_buffer[curr_parent].append(header_prefix + string(seq[rid].name) + "\n" + string(seq[rid].seq) + "\n");
+			}
 		}
 		if (buf0.size() > 0) {
 			fsout0 << buf0; 
@@ -1565,6 +1632,9 @@ int main(int argc, char* argv[]) {
 			fsout1 << buf1; 
 			buf1.clear();
 		}
+
+		
+
 		fsout0.close();
 		fsout1.close();
 		// fclose(fp1);
@@ -1572,6 +1642,19 @@ int main(int argc, char* argv[]) {
 	}
 	// cout << "Time of saving file = " << stopwatch.stop() << std::endl;
 	// delete[] seq;
+
+	FILE *pFileDups;
+	pFileDups = fopen(logpath.c_str(), "w");		
+
+    for (int rid = 0; rid < max_rid; rid++)
+	{
+		if (parents_buffer[rid].length() > 0)
+		{
+			fprintf(pFileDups, "%s", parents_buffer[rid].c_str());
+		}
+	}
+
+	fclose(pFileDups);
 
 	return 0;
 }
